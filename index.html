@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>France × New Zealand Trivia Quiz</title>
+<style>
+  :root{
+    --navy:#151a33;
+    --navy-deep:#0d1022;
+    --cream:#f6f2e8;
+    --red:#c81d3f;
+    --fern:#3c7a5c;
+    --fern-light:#6fae8a;
+    --gold:#d8b465;
+    --ink:#20233a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(60,122,92,0.18), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(200,29,63,0.15), transparent 50%),
+      var(--navy);
+    color:var(--cream);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 80px;
+  }
+  .stage{
+    width:100%;
+    max-width:680px;
+  }
+  header.hero{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .flags{
+    font-size:28px;
+    letter-spacing:6px;
+    opacity:0.9;
+  }
+  h1{
+    font-family: Georgia, "Times New Roman", serif;
+    font-size:clamp(28px,5vw,42px);
+    font-weight:700;
+    margin:10px 0 6px;
+    letter-spacing:0.5px;
+  }
+  h1 .accent{ color: var(--gold); font-style:italic; }
+  .subtitle{
+    color:#c9c4b4;
+    font-size:14px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+
+  /* Fern progress signature */
+  .fern-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin:26px 0 8px;
+  }
+  .fern-wrap svg{ width:64px; height:64px; flex:none; }
+  .fern-track path{
+    fill:none;
+    stroke: rgba(246,242,232,0.18);
+    stroke-width:3.4;
+    stroke-linecap:round;
+  }
+  .fern-fill path{
+    fill:none;
+    stroke: url(#fernGrad);
+    stroke-width:3.4;
+    stroke-linecap:round;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    transition: stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-text{
+    font-size:14px;
+    color:#c9c4b4;
+    letter-spacing:0.5px;
+  }
+  .progress-text strong{ color:var(--cream); font-size:18px; }
+
+  .card{
+    background: rgba(246,242,232,0.05);
+    border:1px solid rgba(246,242,232,0.12);
+    border-radius:14px;
+    padding:28px 26px;
+    backdrop-filter: blur(6px);
+  }
+
+  .qnum{
+    display:inline-block;
+    font-family: Georgia, serif;
+    font-style:italic;
+    color:var(--gold);
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .timer-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    float:right;
+  }
+  .timer-clock{
+    font-family: Georgia, serif;
+    font-weight:700;
+    font-size:16px;
+    color: var(--fern-light);
+    min-width:34px;
+    text-align:right;
+    transition: color 0.2s ease;
+  }
+  .timer-clock.warn{ color: var(--gold); }
+  .timer-clock.danger{ color: var(--red); }
+  .timer-track{
+    width:60px;
+    height:6px;
+    border-radius:4px;
+    background: rgba(246,242,232,0.14);
+    overflow:hidden;
+  }
+  .timer-bar{
+    height:100%;
+    width:100%;
+    background: linear-gradient(90deg, var(--fern-light), var(--gold));
+    transform-origin:left;
+    transition: width 1s linear, background 0.3s ease;
+  }
+  .timer-bar.warn{ background: linear-gradient(90deg, var(--gold), var(--gold)); }
+  .timer-bar.danger{ background: var(--red); }
+  .qtext{
+    font-size:20px;
+    line-height:1.4;
+    margin:0 0 20px;
+    font-weight:600;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .opt{
+    text-align:left;
+    background: rgba(255,255,255,0.03);
+    border:1px solid rgba(246,242,232,0.18);
+    color:var(--cream);
+    padding:14px 16px;
+    border-radius:10px;
+    font-size:15px;
+    cursor:pointer;
+    transition: all 0.15s ease;
+    font-family:inherit;
+  }
+  .opt:hover:not(:disabled){
+    border-color: var(--fern-light);
+    background: rgba(111,174,138,0.1);
+  }
+  .opt:disabled{ cursor:default; }
+  .opt.correct{
+    background: rgba(60,122,92,0.35);
+    border-color: var(--fern-light);
+  }
+  .opt.wrong{
+    background: rgba(200,29,63,0.28);
+    border-color: var(--red);
+  }
+  .opt .letter{
+    display:inline-block;
+    width:22px;
+    font-weight:700;
+    color:var(--gold);
+  }
+
+  .fact{
+    margin-top:18px;
+    padding:16px 18px;
+    background: rgba(216,180,101,0.08);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+    font-size:14.5px;
+    line-height:1.55;
+    color:#e9e4d4;
+    display:none;
+  }
+  .fact.show{ display:block; }
+  .fact b{ color:var(--gold); }
+
+  .next-row{
+    margin-top:22px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  button.primary{
+    background: linear-gradient(135deg, var(--red), #a3172f);
+    color:#fff;
+    border:none;
+    padding:13px 26px;
+    border-radius:9px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    letter-spacing:0.3px;
+    box-shadow: 0 4px 14px rgba(200,29,63,0.35);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.3s ease, transform 0.15s ease;
+  }
+  button.primary.ready{ opacity:1; pointer-events:auto; }
+  button.primary:hover.ready{ transform: translateY(-1px); }
+  button.primary:active.ready{ transform: translateY(0); }
+
+  /* Email gate */
+  .gate{
+    text-align:center;
+  }
+  .gate .fern-big{ width:72px; height:72px; margin:0 auto 14px; display:block; }
+  .gate h2{
+    font-family:Georgia, serif;
+    font-size:26px;
+    margin:0 0 6px;
+  }
+  .gate p.lead{
+    color:#c9c4b4;
+    font-size:15px;
+    margin:0 0 24px;
+  }
+  input[type="email"], input[type="text"]{
+    width:100%;
+    padding:13px 16px;
+    border-radius:9px;
+    border:1px solid rgba(246,242,232,0.25);
+    background: rgba(255,255,255,0.04);
+    color:var(--cream);
+    font-size:15px;
+    font-family:inherit;
+    margin-bottom:12px;
+  }
+  input::placeholder{ color:#8f8a7a; }
+  .gate-error{
+    color:#ff9fae;
+    font-size:13px;
+    margin:-4px 0 12px;
+    min-height:16px;
+  }
+
+  /* Results */
+  .results{ text-align:center; }
+  .score-ring{
+    width:150px; height:150px;
+    margin:0 auto 18px;
+    position:relative;
+  }
+  .score-ring svg{ transform:rotate(-90deg); width:150px; height:150px; }
+  .score-ring circle{ fill:none; stroke-width:10; }
+  .score-ring .bg{ stroke: rgba(246,242,232,0.12); }
+  .score-ring .fg{
+    stroke: url(#fernGrad2);
+    stroke-linecap:round;
+    stroke-dasharray: 408;
+    stroke-dashoffset: 408;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .score-num{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+  .score-num .big{ font-size:36px; font-weight:800; font-family:Georgia,serif; }
+  .score-num .small{ font-size:12px; color:#c9c4b4; letter-spacing:1px; text-transform:uppercase; }
+  .title-badge{
+    display:inline-block;
+    font-family:Georgia, serif;
+    font-style:italic;
+    font-size:22px;
+    color:var(--gold);
+    margin:8px 0 20px;
+  }
+  .review{
+    text-align:left;
+    margin-top:24px;
+    max-height:340px;
+    overflow-y:auto;
+    padding-right:6px;
+  }
+  .review-item{
+    display:flex;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid rgba(246,242,232,0.08);
+    font-size:13.5px;
+  }
+  .review-item .mark{ flex:none; width:20px; text-align:center; font-weight:700; }
+  .review-item .mark.ok{ color:var(--fern-light); }
+  .review-item .mark.no{ color:#ff8fa0; }
+  .actions-row{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    margin-top:26px;
+    flex-wrap:wrap;
+  }
+  button.secondary{
+    background:transparent;
+    border:1px solid rgba(246,242,232,0.3);
+    color:var(--cream);
+    padding:11px 20px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:14px;
+    font-family:inherit;
+  }
+  button.secondary:hover{ border-color:var(--fern-light); }
+
+  footer{
+    text-align:center;
+    margin-top:30px;
+    font-size:12px;
+    color:#7d7969;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .fern-fill path, .score-ring .fg, button.primary{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="fernGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6fae8a"/>
+      <stop offset="100%" stop-color="#d8b465"/>
+    </linearGradient>
+    <linearGradient id="fernGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6fae8a"/>
+      <stop offset="100%" stop-color="#d8b465"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="stage">
+  <header class="hero">
+    <div class="flags">🇫🇷 &nbsp;×&nbsp; 🇳🇿</div>
+    <h1>France <span class="accent">vs</span> New Zealand</h1>
+    <div class="subtitle">Trivia Quiz · Geography, Culture, Rugby & Shared History</div>
+  </header>
+
+  <div class="fern-wrap" id="fernWrap">
+    <svg viewBox="0 0 64 64">
+      <g class="fern-track">
+        <path d="M32 58 C32 40, 30 30, 20 18 M32 58 C32 40, 34 30, 44 18 M32 45 C32 45, 26 38, 18 34 M32 45 C32 45, 38 38, 46 34 M32 32 C32 32, 27 27, 22 25 M32 32 C32 32, 37 27, 42 25"/>
+      </g>
+      <g class="fern-fill">
+        <path id="fernPath" d="M32 58 C32 40, 30 30, 20 18 M32 58 C32 40, 34 30, 44 18 M32 45 C32 45, 26 38, 18 34 M32 45 C32 45, 38 38, 46 34 M32 32 C32 32, 27 27, 22 25 M32 32 C32 32, 37 27, 42 25"/>
+      </g>
+    </svg>
+    <div class="progress-text">Question <strong id="qCounter">1</strong> / 20</div>
+  </div>
+
+  <div class="card" id="cardArea">
+    <!-- content injected by JS -->
+  </div>
+
+  <footer>Run entirely in your browser — no data leaves your computer unless you export it. &nbsp;·&nbsp; <a href="#" id="adminLink" style="color:#7d7969;">Admin</a></footer>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────
+// Paste the Google Apps Script "Web app" URL here (see README for setup).
+// Leave as "" to only save locally in the browser (no online storage).
+const GOOGLE_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxVjII_Zca8pUJti4WZz_aX_DwIuxU_UX5xpE7HQ70HqrmK-K6e74VUSt7mvSlAWUf5VA/exec";
+// ───────────────────────────────────────────────────────────────────────
+
+const QUESTIONS = [
+{q:"Which country is larger in land area?", opts:[
+  "New Zealand land area is approximately equal to France",
+  "France land area is approximately twice bigger than NZ",
+  "France land area is approximately 3 times bigger than NZ",
+  "France land area is approximately 4 times bigger than NZ"], a:1,
+ fact:"Metropolitan France covers approximately 551,000 km², while New Zealand covers approximately 268,000 km² — France is a little more than twice the size of New Zealand. New Zealand has a much lower population density and more remote wilderness."},
+{q:"Which country has more people?", opts:[
+  "France has 10 times more people than NZ",
+  "France has 5 times more people than NZ",
+  "France has 12 times more people than NZ",
+  "Same population"], a:0,
+ fact:"France has around 68 million inhabitants, while New Zealand has around 5.4 million. Despite the population gap, New Zealand covers almost half France's land area."},
+{q:"Which country has more sheep/chicken per person?", opts:[
+  "France's chicken/person ratio is bigger than NZ's sheep/person ratio",
+  "NZ's sheep/person ratio is bigger than France's chicken/person ratio",
+  "Same ratio"], a:1,
+ fact:"France has about 3.3 chickens per inhabitant, while New Zealand has roughly five sheep for every person. Sheep farming has shaped rural economies in both countries, especially for wool and lamb."},
+{q:"Which country has more official languages?", opts:[
+  "France","New Zealand","Same number"], a:1,
+ fact:"New Zealand has three official languages: English, Te Reo Māori and NZ Sign Language. France's official language is French, though regional languages like Breton, Corsican and Occitan are still spoken. Te Reo Māori became official in 1987."},
+{q:"Which country has the higher mountain?", opts:[
+  "France (Mont Blanc)","New Zealand (Aoraki/Mt Cook)","Same height"], a:0,
+ fact:"Mont Blanc rises to about 4,809 m, while Aoraki/Mount Cook reaches about 3,724 m. Both are iconic climbing and hiking destinations."},
+{q:"Both France and New Zealand are internationally recognised producers of what?", opts:[
+  "Olive Oil","Wine","Chocolate","Whisky"], a:1,
+ fact:"France is famed for Bordeaux, Champagne and Burgundy, while New Zealand is renowned for Marlborough Sauvignon Blanc, Central Otago Pinot Noir and Hawke's Bay reds — a major export despite its small size."},
+{q:"The kiwi is to NZ what the _______ is to France", opts:[
+  "Chicken","Rooster","Pigeon","Ratatouille"], a:1,
+ fact:"The kiwi, a flightless bird found only in New Zealand, is a national symbol. Le Coq Gaulois (the Gallic rooster) has represented France for centuries, often seen on sporting uniforms and national emblems."},
+{q:"Which country has more UNESCO World Heritage Sites?", opts:[
+  "France","New Zealand","Same number"], a:0,
+ fact:"France has more than 50 UNESCO World Heritage Sites, including the Palace of Versailles, Mont-Saint-Michel and the banks of the Seine. New Zealand has three: Te Wāhipounamu, Tongariro National Park and the Sub-Antarctic Islands."},
+{q:"Which country has active volcanoes?", opts:[
+  "France","New Zealand","Both have active volcanoes"], a:2,
+ fact:"New Zealand sits on the Pacific Ring of Fire with active volcanoes like Ruapehu, Whakaari/White Island and Tongariro. France has volcanic regions in Auvergne and oversees active volcanic territories such as Réunion Island."},
+{q:"Which French-founded settlement in New Zealand still celebrates its French heritage today?", opts:[
+  "Nelson","Rotorua","Akaroa","Hamilton"], a:2,
+ fact:"French settlers arrived in Akaroa in 1840. The town still features French street names, architecture, cuisine and annual celebrations — the strongest visible link between France and New Zealand today."},
+{q:"France and New Zealand met in the 2011 Rugby World Cup Final. Who won?", opts:[
+  "France","New Zealand","Draw"], a:1,
+ fact:"New Zealand won 8-7 in Auckland — one of the closest Rugby World Cup finals ever played. It was NZ's first title since 1987, also on home soil."},
+{q:"Which explorer's voyage helped establish a French connection with New Zealand?", opts:[
+  "Captain Cook","Jean-François de La Pérouse","Marco Polo","Christopher Columbus"], a:1,
+ fact:"La Pérouse sailed near New Zealand in 1787. His expedition contributed to European knowledge of the Pacific, and several places around the region commemorate his achievements."},
+{q:"New Zealand's D'Urville Island is named after a famous French:", opts:[
+  "King","Rugby player","Explorer","Artist"], a:2,
+ fact:"Jules Dumont d'Urville was a French naval officer and explorer who mapped parts of New Zealand and Antarctica. D'Urville Island, near the top of the South Island, bears his name."},
+{q:"Which country has won more Rugby World Cups?", opts:[
+  "France","New Zealand","Same number"], a:1,
+ fact:"New Zealand has won the Rugby World Cup four times: 1987, 2011, 2015 and 2023. France has reached the final three times but never won, though it has beaten the All Blacks in several famous World Cup upsets."},
+{q:"Which of the following is true?", opts:[
+  "Both countries have regions known for world-class cheese and wine",
+  "Neither country produces wine",
+  "Only France produces cheese",
+  "Only New Zealand exports dairy products"], a:0,
+ fact:"France produces over 1,000 varieties of cheese and is one of the world's largest wine producers. New Zealand exports dairy to more than 100 countries and has won international awards for cheese and wine alike."},
+{q:"Which country has more coastline?", opts:[
+  "France has more coastline than NZ",
+  "New Zealand has twice the coastline length of France",
+  "Same coastline length",
+  "New Zealand has three times the coastline length of France"], a:1,
+ fact:"New Zealand's deeply indented coastline stretches approximately 15,000 km, compared with around 5,500 km for metropolitan France."},
+{q:"Which country receives more international tourists each year?", opts:[
+  "France has 30 times more international tourists than NZ",
+  "New Zealand has twice more international tourists than France",
+  "France has 15 times more international tourists than NZ",
+  "Both receive the same number"], a:2,
+ fact:"France is consistently one of the most visited countries in the world, welcoming around 100 million visitors annually, compared with roughly 3–4 million international visitors to New Zealand in a typical year."},
+{q:"Which French town was liberated by New Zealand soldiers during the First World War?", opts:[
+  "Le Quesnoy","Reims","Strasbourg","Lille"], a:0,
+ fact:"Le Quesnoy had been occupied since 1914. On 4 November 1918, New Zealand soldiers liberated the walled town by scaling its ramparts with ladders, avoiding heavy bombardment. The town still commemorates this bond today."},
+{q:"How many New Zealand public schools offer French-English bilingual units supported by FRENZ?", opts:[
+  "3 schools","5 schools","6 schools","10 schools"], a:2,
+ fact:"Six state schools offer French-English bilingual education supported by FRENZ, from primary through early secondary — including 3 in Auckland, 1 in Wellington and 2 in Christchurch."},
+{q:"How many countries and territories have English as an official language compared with French?", opts:[
+  "English: ~86 countries and territories, French: ~36",
+  "English: ~36 countries and territories, French: ~86",
+  "English and French: about the same number",
+  "English: ~20 countries and territories, French: ~100"], a:0,
+ fact:"English is official in about 58 sovereign states and 28 non-sovereign entities (~86 total). French is official in about 26 independent nations and 10 subnational territories (~36 total). Counts vary depending on methodology."}
+];
+
+const SCORING = [
+  {min:0, max:4, title:"Tourist"},
+  {min:5, max:8, title:"World Traveller"},
+  {min:9, max:12, title:"Franco-Kiwi Specialist"},
+  {min:13, max:16, title:"France-New Zealand Expert"},
+  {min:17, max:20, title:"Honorary Citizen of Both Nations 🇫🇷🇳🇿"}
+];
+
+const TIME_PER_QUESTION = 30; // seconds
+let current = 0;
+let score = 0;
+let answers = []; // {chosen, correct, timedOut}
+let userEmail = "";
+let userName = "";
+let timeLeft = TIME_PER_QUESTION;
+let timerInterval = null;
+
+const cardArea = document.getElementById('cardArea');
+const qCounter = document.getElementById('qCounter');
+const fernPath = document.getElementById('fernPath');
+const FERN_LEN = 400;
+
+function updateFern(){
+  const pct = current / QUESTIONS.length;
+  fernPath.style.strokeDashoffset = (FERN_LEN - FERN_LEN * pct);
+  qCounter.textContent = Math.min(current+1, QUESTIONS.length);
+}
+
+function letterFor(i){ return String.fromCharCode(65+i); }
+
+function renderQuestion(){
+  updateFern();
+  const item = QUESTIONS[current];
+  let html = `<div class="qnum">Question ${current+1} of ${QUESTIONS.length}</div>`;
+  html += `<div class="timer-row"><div class="timer-track"><div class="timer-bar" id="timerBar"></div></div><div class="timer-clock" id="timerClock">${TIME_PER_QUESTION}</div></div>`;
+  html += `<div style="clear:both;"></div>`;
+  html += `<div class="qtext">${item.q}</div>`;
+  html += `<div class="options">`;
+  item.opts.forEach((opt,i)=>{
+    html += `<button class="opt" data-idx="${i}"><span class="letter">${letterFor(i)}</span>${opt}</button>`;
+  });
+  html += `</div>`;
+  html += `<div class="fact" id="factBox"><b>Did you know?</b> ${item.fact}</div>`;
+  html += `<div class="next-row"><button class="primary" id="nextBtn">${current === QUESTIONS.length-1 ? "See results" : "Next question"}</button></div>`;
+  cardArea.innerHTML = html;
+
+  const optButtons = cardArea.querySelectorAll('.opt');
+  optButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.idx,10);
+      handleAnswer(idx, optButtons, item);
+    });
+  });
+  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+  startTimer(optButtons, item);
+}
+
+function startTimer(optButtons, item){
+  clearInterval(timerInterval);
+  timeLeft = TIME_PER_QUESTION;
+  updateTimerUI();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerUI();
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      handleTimeout(optButtons, item);
+    }
+  }, 1000);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+function updateTimerUI(){
+  const bar = document.getElementById('timerBar');
+  const clock = document.getElementById('timerClock');
+  if(!bar || !clock) return;
+  const pct = Math.max(0, (timeLeft / TIME_PER_QUESTION) * 100);
+  bar.style.width = pct + '%';
+  clock.textContent = Math.max(0, timeLeft);
+  bar.classList.remove('warn','danger');
+  clock.classList.remove('warn','danger');
+  if(timeLeft <= 5){
+    bar.classList.add('danger');
+    clock.classList.add('danger');
+  } else if(timeLeft <= 10){
+    bar.classList.add('warn');
+    clock.classList.add('warn');
+  }
+}
+
+function handleTimeout(optButtons, item){
+  optButtons.forEach(b=>b.disabled = true);
+  optButtons[item.a].classList.add('correct');
+  document.getElementById('factBox').classList.add('show');
+  answers.push({idx:-1, correct:false, timedOut:true});
+  document.getElementById('nextBtn').classList.add('ready');
+}
+
+function handleAnswer(idx, optButtons, item){
+  stopTimer();
+  optButtons.forEach(b=>b.disabled = true);
+  optButtons[idx].classList.add(idx===item.a ? 'correct' : 'wrong');
+  if(idx !== item.a){
+    optButtons[item.a].classList.add('correct');
+  }
+  document.getElementById('factBox').classList.add('show');
+  const correct = idx === item.a;
+  if(correct) score++;
+  answers.push({idx, correct, timedOut:false});
+  document.getElementById('nextBtn').classList.add('ready');
+}
+
+function nextQuestion(){
+  stopTimer();
+  current++;
+  if(current >= QUESTIONS.length){
+    updateFern();
+    renderEmailGate();
+  } else {
+    renderQuestion();
+  }
+}
+
+function renderEmailGate(){
+  cardArea.innerHTML = `
+    <div class="gate">
+      <svg class="fern-big" viewBox="0 0 64 64">
+        <g style="stroke:url(#fernGrad); fill:none; stroke-width:3.4; stroke-linecap:round;">
+          <path d="M32 58 C32 40, 30 30, 20 18 M32 58 C32 40, 34 30, 44 18 M32 45 C32 45, 26 38, 18 34 M32 45 C32 45, 38 38, 46 34 M32 32 C32 32, 27 27, 22 25 M32 32 C32 32, 37 27, 42 25"/>
+        </g>
+      </svg>
+      <h2>You've finished the quiz!</h2>
+      <p class="lead">Enter your details to reveal your score and title.</p>
+      <input type="text" id="nameInput" placeholder="Your name (optional)">
+      <input type="email" id="emailInput" placeholder="you@example.com">
+      <div class="gate-error" id="gateError"></div>
+      <button class="primary ready" id="revealBtn" style="width:100%;">Reveal my score</button>
+    </div>
+  `;
+  document.getElementById('revealBtn').addEventListener('click', ()=>{
+    const emailVal = document.getElementById('emailInput').value.trim();
+    const nameVal = document.getElementById('nameInput').value.trim();
+    const errBox = document.getElementById('gateError');
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailPattern.test(emailVal)){
+      errBox.textContent = "Please enter a valid email address to continue.";
+      return;
+    }
+    userEmail = emailVal;
+    userName = nameVal;
+    saveSubmission();
+    renderResults();
+  });
+}
+
+const STORAGE_KEY = "franceNZQuizSubmissions";
+
+function loadSubmissions(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error("Could not read local quiz database:", e);
+    return [];
+  }
+}
+
+function saveSubmission(){
+  const record = {
+    name: userName,
+    email: userEmail,
+    score: score,
+    total: QUESTIONS.length,
+    title: getTitle(score),
+    timestamp: new Date().toISOString(),
+    answers: answers.map((a,i)=>({
+      question: QUESTIONS[i].q,
+      chosen: a.timedOut ? null : QUESTIONS[i].opts[a.idx],
+      correct: a.correct,
+      timedOut: !!a.timedOut
+    }))
+  };
+
+  // Always save a local copy as a backup.
+  try{
+    const all = loadSubmissions();
+    all.push(record);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  }catch(e){
+    console.error("Could not save to local quiz database:", e);
+  }
+
+  // Also send to the Google Sheet, if configured.
+  if(GOOGLE_SHEET_ENDPOINT){
+    fetch(GOOGLE_SHEET_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors", // Apps Script doesn't return CORS headers by default
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(record)
+    }).catch((e)=>{
+      console.error("Could not reach Google Sheet endpoint:", e);
+    });
+  }
+}
+
+function exportAllCSV(){
+  const all = loadSubmissions();
+  if(all.length === 0){
+    alert("No responses saved yet on this browser.");
+    return;
+  }
+  const rows = [["Name","Email","Score","Total","Title","Timestamp"]];
+  all.forEach(s => rows.push([s.name, s.email, s.score, s.total, s.title, s.timestamp]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `all_quiz_responses_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function clearAllSubmissions(){
+  if(confirm("This will permanently delete all locally saved responses on this browser. Continue?")){
+    localStorage.removeItem(STORAGE_KEY);
+    renderAdminPanel();
+  }
+}
+
+function renderAdminPanel(){
+  stopTimer();
+  const all = loadSubmissions();
+  let rowsHtml = "";
+  if(all.length === 0){
+    rowsHtml = `<p style="color:#8f8a7a; font-size:14px;">No responses saved on this browser yet.</p>`;
+  } else {
+    rowsHtml = `<div style="text-align:left; max-height:320px; overflow-y:auto; margin-top:16px;">`;
+    all.slice().reverse().forEach(s=>{
+      rowsHtml += `<div class="review-item" style="justify-content:space-between;">
+        <div>
+          <b style="color:var(--cream);">${s.name || "(no name)"}</b> — ${s.email}<br>
+          <span style="color:#8f8a7a;">${new Date(s.timestamp).toLocaleString()}</span>
+        </div>
+        <div style="text-align:right; flex:none;">
+          <b style="color:var(--gold);">${s.score}/${s.total}</b><br>
+          <span style="color:#8f8a7a; font-size:12px;">${s.title}</span>
+        </div>
+      </div>`;
+    });
+    rowsHtml += `</div>`;
+  }
+  cardArea.innerHTML = `
+    <div class="results">
+      <h2 style="font-family:Georgia,serif; margin-top:0;">Admin: Saved Responses</h2>
+      <p style="color:#c9c4b4; font-size:14px;">${all.length} response${all.length===1?'':'s'} saved in this browser's local storage.</p>
+      ${rowsHtml}
+      <div class="actions-row">
+        <button class="secondary" id="exportAllBtn">Export all (.csv)</button>
+        <button class="secondary" id="clearAllBtn">Clear saved data</button>
+        <button class="secondary" id="backBtn">Back to quiz</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('exportAllBtn').addEventListener('click', exportAllCSV);
+  document.getElementById('clearAllBtn').addEventListener('click', clearAllSubmissions);
+  document.getElementById('backBtn').addEventListener('click', restartQuiz);
+}
+
+function getTitle(s){
+  return SCORING.find(t => s >= t.min && s <= t.max)?.title || "Tourist";
+}
+
+function renderResults(){
+  const title = getTitle(score);
+  const pct = score / QUESTIONS.length;
+  const circumference = 2 * Math.PI * 65; // r=65
+  const offset = circumference - circumference * pct;
+
+  let reviewHtml = "";
+  QUESTIONS.forEach((item,i)=>{
+    const a = answers[i];
+    const label = a.timedOut ? "⏱ Time's up" : (a.correct ? "✓" : "✗");
+    reviewHtml += `<div class="review-item">
+      <div class="mark ${a.correct ? 'ok' : 'no'}">${label}</div>
+      <div>${item.q}<br><span style="color:#8f8a7a;">Correct answer: ${item.opts[item.a]}</span></div>
+    </div>`;
+  });
+
+  cardArea.innerHTML = `
+    <div class="results">
+      <div class="score-ring">
+        <svg viewBox="0 0 150 150">
+          <circle class="bg" cx="75" cy="75" r="65"/>
+          <circle class="fg" id="scoreCircle" cx="75" cy="75" r="65" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"/>
+        </svg>
+        <div class="score-num">
+          <div class="big">${score}/${QUESTIONS.length}</div>
+          <div class="small">score</div>
+        </div>
+      </div>
+      <div class="title-badge">${title}</div>
+      <p style="color:#c9c4b4; font-size:14px;">${userName ? userName + ", thanks" : "Thanks"} for playing! Results recorded for <b style="color:var(--cream);">${userEmail}</b>.<br><span style="font-size:12px; color:#8f8a7a;">${GOOGLE_SHEET_ENDPOINT ? "Submitted to the online spreadsheet, and saved locally as a backup." : "Saved locally on this device only."}</span></p>
+      <div class="actions-row">
+        <button class="secondary" id="exportBtn">Export result (.csv)</button>
+        <button class="secondary" id="restartBtn">Play again</button>
+      </div>
+      <div class="review" id="reviewList">${reviewHtml}</div>
+    </div>
+  `;
+  requestAnimationFrame(()=>{
+    document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+}
+
+function exportCSV(){
+  const rows = [
+    ["Name","Email","Score","Total","Title","Timestamp"],
+    [userName, userEmail, score, QUESTIONS.length, getTitle(score), new Date().toISOString()]
+  ];
+  QUESTIONS.forEach((item,i)=>{
+    const a = answers[i];
+    const chosen = a.timedOut ? "(no answer - time expired)" : item.opts[a.idx];
+    rows.push([`Q${i+1}: ${item.q}`, "", chosen, "", a.correct ? "Correct" : (a.timedOut ? "Timed out" : "Incorrect"), ""]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `quiz_result_${userEmail.replace(/[^a-z0-9]/gi,'_')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function restartQuiz(){
+  stopTimer();
+  current = 0;
+  score = 0;
+  answers = [];
+  userEmail = "";
+  userName = "";
+  renderQuestion();
+}
+
+renderQuestion();
+document.getElementById('adminLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  renderAdminPanel();
+});
+</script>
+</body>
+</html>
